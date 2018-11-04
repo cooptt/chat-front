@@ -1,30 +1,63 @@
 import React, { Component } from 'react';
-
+import axios from 'axios'
 
 
 class Inbox extends Component {
     state = {
-        messages : [
-            {userId:'4',content: 'Hola'},
-            {userId:'2',content: 'Hola tu'},
-            {userId:'4',content: 'Como estas?'},
-            {userId:'2',content: 'Bien y tu'}
-        ],
-        message : null
+        messages : [],
+        message : ''
     }
 
+    componentWillMount(){
+        let path = `http://127.0.0.1:8080/getConversation?userId=${this.props.srcId}&mUserId=${this.props.destId}`
+        axios.get(path)
+        .then( response =>{
+            this.setState({
+                messages:response.data.data
+            })
+        })
+        .catch( error=>{
+            console.log(error);
+        })
+
+
+    }
 
     componentDidMount(){
-        ///here get all messages
+      this.interval = setInterval(() =>{
+          let path = `http://127.0.0.1:8080/getConversation?userId=${this.props.srcId}&mUserId=${this.props.destId}`
+          axios.get(path)
+          .then( response =>{
+              this.setState({
+                  messages:response.data.data
+              })
+          })
+          .catch( error=>{
+              console.log(error);
+          })
+      }, 3000);
+
     }
+
+
+    componentWillUnmount() {
+      clearInterval(this.interval);
+    }
+
+
 
     sendMessageHandler = (event) =>{
         event.preventDefault();
         // here i send the message to Felipe
-        let messages = [...this.state.messages]
-        messages.push({userId:this.props.userId,content:this.state.message})
-        this.setState({
-            messages
+        let path = `http://127.0.0.1:8080/addMessage?rscUserId=${this.props.srcId}&destUserId=${this.props.destId}`
+        axios.post(path,{content:this.state.message})
+        .then( response =>{
+            console.log(response);
+            document.getElementById("sendMessageForm").reset()
+        })
+        .catch( error=>{
+            console.log(error);
+            document.getElementById("sendMessageForm").reset()
         })
     }
 
@@ -36,17 +69,19 @@ class Inbox extends Component {
     render() {
         let messages = null;
         messages = this.state.messages.map( (msg,index)=>{
-            if(msg.userId==this.props.srcId)
-                return   <p key={index} > {msg.content} </p>
-            else 
-                 return <p key={index} >·············3 {msg.content} </p>
+            if(msg.srcUserId===parseInt(this.props.srcId)){
+                return   <p key={index} className="message" > You: {msg.content} </p>
+            }else
+                 return <p key={index}  className="message darker"> User: {msg.content} </p>
         })
         return (
-            <div>
-                {messages}
-                <form onSubmit={this.sendMessageHandler}>
-                    <input type="text" onChange={this.typingHandler} required/>
-                    <input type="submit" value="Send Message"/>
+            <div className="Inbox">
+                <div className="Messages">
+                    {messages}
+                </div>
+                <form onSubmit={this.sendMessageHandler} id="sendMessageForm">
+                    <input type="text" onChange={this.typingHandler}  formnovalidate required/>
+                    <input type="submit" value="Send"/>
                 </form>
             </div>
         );

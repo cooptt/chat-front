@@ -1,11 +1,12 @@
 import React, { Component } from 'react';
-import logo from './logo.svg';
 import './App.css';
 import Chat from './components/Chat/Chat'
 class App extends Component {
+
+  // props.destId, only if the message is from USER-PROFILE
   render() {
     return (
-      <Chat />
+      <Chat userId='0' destId='2'/>
     );
   }
 }
